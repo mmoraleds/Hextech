@@ -1,10 +1,10 @@
 # Hextech
 
 Team Members:
-Moraleda, Angela Mychaella
-Manalo, Charles Vincent
-Echague, JM
-Salangsang, Szareena
+- Moraleda, Angela Mychaella
+- Manalo, Charles Vincent
+- Echague, JM
+- Salangsang, Szareena
 
 Group Name: Hextech
 Project Case:
