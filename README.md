@@ -12,11 +12,11 @@ Project Case:
   
 Initial Product Idea:
 - Tamogatchi Learning Interactive Buddy: M.E.C.H.A.
-M – Modern
-E – Educational
-C – Companion for
-H – Higher Learning
-A – Assistance
+#M – Modern
+#E – Educational
+#C – Companion for
+#H – Higher Learning
+#A – Assistance
 
 Features:
 - Search Bar or Ask Question AI 
