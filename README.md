@@ -34,6 +34,3 @@ AI/External Disclosure:
 - Nano Banana - image modifications
 - Canvas AI - generating background images
 - Chatgpt - Code Revisions
-
-- Note: The following prototype does not feature a companion or an AI in its output.
- 
