@@ -29,7 +29,7 @@ Features:
 - Calculate Grade Average
 
 AI/External Disclosure:
-Nano Banana - image modifications
-Canvas AI - generating background images
-Chatgpt - Code Revisions
+- Nano Banana - image modifications
+- Canvas AI - generating background images
+- Chatgpt - Code Revisions
  
