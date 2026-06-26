@@ -78,7 +78,7 @@ Students earn rewards by actively using the platform, including:
 - Trainer Levels
 
 ===!!!Choose ACADEMON!!!===
-Traditional studying can often feel repetitive and unmotivating. Academon addresses this by combining educational content with game mechanics that keep students engaged. By integrating AI assistance, interactive battles, and a rewarding progression system, the platform encourages learners to stay motivated while developing their knowledge across different subjects.
+- Traditional studying can often feel repetitive and unmotivating. Academon addresses this by combining educational content with game mechanics that keep students engaged. By integrating AI assistance, interactive battles, and a rewarding progression system, the platform encourages learners to stay motivated while developing their knowledge across different subjects.
 Whether reviewing notes, asking the AI Professor for help, or battling to gain experience, Academon turns every study session into an opportunity to learn, improve, and level up.
 
 
