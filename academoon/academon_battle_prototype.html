@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,system-ui);background:var(--surface-0,#f1efe8);color:var(--text-primary,#2c2c2a);min-height:100vh}
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.screen.active{display:flex}
+.card{background:var(--surface-2,#fff);border:0.5px solid var(--border,rgba(0,0,0,0.12));border-radius:16px;padding:28px 32px;width:100%;max-width:480px}
+h1{font-size:28px;font-weight:500;margin-bottom:8px;text-align:center}
+h2{font-size:20px;font-weight:500;margin-bottom:16px}
+p.sub{font-size:14px;color:var(--text-secondary,#5f5e5a);text-align:center;margin-bottom:24px}
+.btn{display:block;width:100%;padding:14px 20px;border-radius:10px;border:0.5px solid var(--border-strong,rgba(0,0,0,0.2));background:var(--surface-2,#fff);cursor:pointer;font-size:15px;font-weight:500;color:var(--text-primary,#2c2c2a);transition:background 0.15s;margin-bottom:10px;text-align:left}
+.btn:hover{background:var(--surface-1,#f1efe8)}
+.btn.primary{background:#4a3fa0;color:#fff;border-color:#4a3fa0}
+.btn.primary:hover{background:#3c3489}
+.btn.danger{background:#c0392b;color:#fff;border-color:#c0392b}
+.btn.danger:hover{background:#992d20}
+.btn.selected{border-color:#4a3fa0;background:#eeedfe;color:#3c3489}
+.logo{font-size:48px;text-align:center;margin-bottom:12px}
+.grade-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.grade-grid .btn{margin-bottom:0}
+/* Battle UI */
+.battle-wrap{width:100%;max-width:680px;padding:0}
+.combatants{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.combatant-card{background:var(--surface-2,#fff);border:0.5px solid var(--border,rgba(0,0,0,0.12));border-radius:12px;padding:14px}
+.combatant-name{font-size:13px;font-weight:500;color:var(--text-secondary,#5f5e5a);margin-bottom:6px}
+.hp-bar-wrap{background:#e0ddd5;border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px}
+.hp-bar{height:8px;border-radius:4px;transition:width 0.6s ease}
+.hp-bar.high{background:#3b6d11}
+.hp-bar.mid{background:#ba7517}
+.hp-bar.low{background:#a32d2d}
+.hp-text{font-size:12px;color:var(--text-secondary,#5f5e5a)}
+.academon-name{font-size:18px;font-weight:500;margin-top:6px}
+.type-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-top:4px;font-weight:500}
+.question-box{background:var(--surface-2,#fff);border:0.5px solid var(--border,rgba(0,0,0,0.12));border-radius:12px;padding:20px;margin-bottom:14px;min-height:70px}
+.question-text{font-size:15px;color:var(--text-primary,#2c2c2a);line-height:1.5}
+.difficulty-badge{font-size:11px;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px;font-weight:500}
+.diff-easy{background:#eaf3de;color:#3b6d11}
+.diff-medium{background:#faeeda;color:#854f0b}
+.diff-hard{background:#fcebeb;color:#a32d2d}
+.diff-vhard{background:#eeedfe;color:#3c3489}
+.moves-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.move-btn{padding:12px 14px;border-radius:10px;border:0.5px solid var(--border-strong,rgba(0,0,0,0.2));background:var(--surface-1,#f1efe8);cursor:pointer;font-size:13px;font-weight:500;text-align:left;transition:background 0.15s;color:var(--text-primary,#2c2c2a)}
+.move-btn:hover:not(:disabled){background:#eeedfe;border-color:#7f77dd}
+.move-btn:disabled{opacity:0.4;cursor:not-allowed}
+.move-name{font-size:13px;font-weight:500}
+.move-meta{font-size:11px;color:var(--text-secondary,#5f5e5a);margin-top:2px}
+.feedback-box{border-radius:10px;padding:14px 16px;margin-bottom:12px;font-size:13px;line-height:1.6;display:none}
+.feedback-box.correct{background:#eaf3de;border:0.5px solid #97c459;color:#27500a}
+.feedback-box.wrong{background:#fcebeb;border:0.5px solid #f09595;color:#501313}
+.feedback-box.show{display:block}
+.nav-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.tab-btn{padding:8px 14px;border-radius:8px;border:0.5px solid var(--border,rgba(0,0,0,0.12));background:var(--surface-2,#fff);cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary,#5f5e5a)}
+.tab-btn.active{background:#eeedfe;border-color:#7f77dd;color:#3c3489}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+.badge-card{background:var(--surface-2,#fff);border:0.5px solid var(--border,rgba(0,0,0,0.12));border-radius:10px;padding:14px;text-align:center}
+.badge-icon{font-size:32px;margin-bottom:6px}
+.badge-label{font-size:12px;font-weight:500;color:var(--text-secondary,#5f5e5a)}
+.notes-area{width:100%;border:0.5px solid var(--border,rgba(0,0,0,0.12));border-radius:8px;padding:10px;font-size:14px;resize:vertical;min-height:120px;background:var(--surface-1,#f1efe8);color:var(--text-primary,#2c2c2a)}
+.party-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.party-card{border:0.5px solid var(--border,rgba(0,0,0,0.12));border-radius:10px;padding:10px;text-align:center}
+.party-avatar{font-size:28px;margin-bottom:4px}
+.party-name{font-size:12px;font-weight:500}
+.party-hp{font-size:11px;color:var(--text-secondary,#5f5e5a)}
+.heal-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid #97c459;background:#eaf3de;color:#27500a;cursor:pointer;margin-top:4px}
+.loading{text-align:center;padding:40px;color:var(--text-secondary,#5f5e5a)}
+.spinner{display:inline-block;width:28px;height:28px;border:3px solid #d3d1c7;border-top-color:#4a3fa0;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.subject-list{list-style:none;margin-top:8px}
+.subject-list li{padding:8px 0;border-bottom:0.5px solid var(--border,rgba(0,0,0,0.08));font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.subject-list li:last-child{border-bottom:none}
+.fight-btn{padding:6px 14px;border-radius:8px;border:0.5px solid #7f77dd;background:#eeedfe;color:#3c3489;cursor:pointer;font-size:12px;font-weight:500}
+.fight-btn:hover{background:#cecbf6}
+.section-label{font-size:11px;font-weight:500;color:var(--text-muted,#888780);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.review-chat{background:var(--surface-1,#f1efe8);border-radius:10px;padding:14px;min-height:80px;font-size:14px;line-height:1.6;color:var(--text-primary,#2c2c2a)}
+.review-input-row{display:flex;gap:8px;margin-top:10px}
+.review-input{flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--border,rgba(0,0,0,0.12));font-size:14px;background:var(--surface-2,#fff);color:var(--text-primary,#2c2c2a)}
+.review-send{padding:10px 16px;border-radius:8px;border:none;background:#4a3fa0;color:#fff;cursor:pointer;font-size:14px}
+.battle-log{font-size:12px;color:var(--text-secondary,#5f5e5a);text-align:center;min-height:20px;margin-bottom:8px}
+.notes-used-badge{font-size:11px;background:#faeeda;color:#854f0b;padding:3px 8px;border-radius:6px;display:inline-block;margin-left:8px}
+.continue-btn{width:100%;margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- SCREEN 1: Language Select -->
+<div id="s-lang" class="screen active">
+  <div class="logo">📚</div>
+  <div class="card">
+    <h1>Academon</h1>
+    <p class="sub">A battle-based learning companion</p>
+    <p style="font-size:13px;color:var(--text-secondary,#5f5e5a);text-align:center;margin-bottom:18px">Choose your language / Piliin ang iyong wika</p>
+    <button class="btn" onclick="setLang('en')">🇺🇸 English</button>
+    <button class="btn" onclick="setLang('tl')">🇵🇭 Filipino (Tagalog)</button>
+  </div>
+</div>
+
+<!-- SCREEN 2: Grade Level -->
+<div id="s-grade" class="screen">
+  <div class="card">
+    <h2 id="grade-title">What is your education level?</h2>
+    <p class="sub" id="grade-sub">This helps us find the right subjects for you.</p>
+    <button class="btn" id="btn-elem" onclick="setLevel('elementary')">Elementary School</button>
+    <button class="btn" id="btn-hs" onclick="setLevel('highschool')">High School</button>
+    <button class="btn" id="btn-col" onclick="setLevel('college')">College / University</button>
+  </div>
+</div>
+
+<!-- SCREEN 2b: Grade Number -->
+<div id="s-gradenum" class="screen">
+  <div class="card">
+    <h2 id="gradenum-title">What grade are you in?</h2>
+    <div id="grade-options" class="grade-grid"></div>
+  </div>
+</div>
+
+<!-- SCREEN 3: Loading subjects -->
+<div id="s-loading" class="screen">
+  <div class="card" style="text-align:center">
+    <div class="spinner"></div>
+    <p id="loading-msg" style="font-size:14px;color:var(--text-secondary,#5f5e5a)">Professor is preparing your subjects...</p>
+  </div>
+</div>
+
+<!-- SCREEN 4: Main Hub -->
+<div id="s-hub" class="screen" style="padding:16px">
+  <div style="width:100%;max-width:680px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <p style="font-size:11px;font-weight:500;color:var(--text-muted,#888780);text-transform:uppercase;letter-spacing:0.06em" id="hub-level-label"></p>
+        <h2 id="hub-title" style="font-size:20px;font-weight:500">Your Journey</h2>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="badge-count" style="font-size:13px;font-weight:500;background:#eeedfe;color:#3c3489;padding:4px 10px;border-radius:6px"></span>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="showTab('battle')" id="tab-battle">⚔️ Battle</button>
+      <button class="tab-btn" onclick="showTab('review')" id="tab-review">🧠 Review AI</button>
+      <button class="tab-btn" onclick="showTab('badges')" id="tab-badges">🏅 Badges</button>
+      <button class="tab-btn" onclick="showTab('notes')" id="tab-notes">📝 Notes</button>
+      <button class="tab-btn" onclick="showTab('academons')" id="tab-acs">🐾 Academons</button>
+    </div>
+
+    <!-- Battle tab -->
+    <div id="tab-battle-content">
+      <p class="section-label" id="subjects-label">Your Subjects</p>
+      <ul class="subject-list" id="subject-list"></ul>
+    </div>
+
+    <!-- Review AI tab -->
+    <div id="tab-review-content" style="display:none">
+      <p class="section-label" id="review-label">Ask the professor anything</p>
+      <div class="review-chat" id="review-chat-box" style="white-space:pre-wrap"></div>
+      <div class="review-input-row">
+        <input class="review-input" id="review-input" placeholder="e.g. Explain photosynthesis to me..." />
+        <button class="review-send" onclick="sendReview()">Ask</button>
+      </div>
+    </div>
+
+    <!-- Badges tab -->
+    <div id="tab-badges-content" style="display:none">
+      <p class="section-label" id="badges-label">Conquered subjects</p>
+      <div class="badge-grid" id="badge-grid"></div>
+      <p id="no-badges" style="font-size:14px;color:var(--text-secondary,#5f5e5a);margin-top:16px;display:none">No badges yet — go battle a subject!</p>
+    </div>
+
+    <!-- Notes tab -->
+    <div id="tab-notes-content" style="display:none">
+      <p class="section-label" id="notes-label">Your notes</p>
+      <select id="notes-subject-sel" style="width:100%;margin-bottom:10px;padding:8px;border-radius:8px;border:0.5px solid var(--border,rgba(0,0,0,0.12));font-size:14px;background:var(--surface-2,#fff)"></select>
+      <textarea class="notes-area" id="notes-area" placeholder="Write your notes here..."></textarea>
+      <button class="btn primary" style="margin-top:10px;width:auto;padding:8px 20px" onclick="saveNote()">Save note</button>
+    </div>
+
+    <!-- Academons tab -->
+    <div id="tab-academons-content" style="display:none">
+      <p class="section-label">Your party</p>
+      <div class="party-grid" id="party-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 5: Battle -->
+<div id="s-battle" class="screen" style="padding:12px;align-items:flex-start">
+  <div class="battle-wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <button class="btn" style="width:auto;padding:6px 14px;font-size:13px" onclick="exitBattle()">← Exit</button>
+      <div>
+        <span style="font-size:13px;font-weight:500" id="battle-subject-name"></span>
+        <span id="round-badge" style="font-size:11px;background:#eeedfe;color:#3c3489;padding:2px 8px;border-radius:6px;margin-left:6px"></span>
+      </div>
+    </div>
+    <div class="combatants">
+      <div class="combatant-card">
+        <div class="combatant-name" id="ai-combatant-label">AI Professor</div>
+        <div class="academon-name" id="ai-aca-name">—</div>
+        <div id="ai-type-badge" class="type-badge"></div>
+        <div class="hp-bar-wrap" style="margin-top:8px"><div class="hp-bar high" id="ai-hp-bar" style="width:100%"></div></div>
+        <div class="hp-text" id="ai-hp-text">HP 500 / 500</div>
+      </div>
+      <div class="combatant-card">
+        <div class="combatant-name" id="your-combatant-label">Your Academon</div>
+        <div class="academon-name" id="your-aca-name">—</div>
+        <div id="your-type-badge" class="type-badge"></div>
+        <div class="hp-bar-wrap" style="margin-top:8px"><div class="hp-bar high" id="your-hp-bar" style="width:100%"></div></div>
+        <div class="hp-text" id="your-hp-text">HP 500 / 500</div>
+      </div>
+    </div>
+    <div class="battle-log" id="battle-log"></div>
+    <div class="question-box" id="question-box">
+      <div style="font-size:14px;color:var(--text-secondary,#5f5e5a);text-align:center">Choose a move to start the battle!</div>
+    </div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <div class="moves-grid" id="moves-grid"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <button class="btn" id="notes-once-btn" style="width:auto;padding:6px 14px;font-size:12px" onclick="useNotesOnce()">📝 Notes <span id="notes-used-indicator"></span></button>
+      <button class="btn primary continue-btn" id="continue-btn" style="display:none;width:auto;padding:8px 18px;font-size:13px" onclick="continueAfterFeedback()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+const MODEL = "claude-sonnet-4-6";
+
+const TYPES = ["Normal","Fire","Water","Grass","Ground","Electric","Bug","Ice","Steel","Flying","Fairy","Psychic","Poison","Dragon","Ghost","Dark"];
+const TYPE_COLORS = {Normal:"#888780",Fire:"#d85a30",Water:"#378add",Grass:"#639922",Ground:"#ba7517",Electric:"#ef9f27",Bug:"#639922",Ice:"#185fa5",Steel:"#5f5e5a",Flying:"#7f77dd",Fairy:"#d4537e",Psychic:"#993556",Poison:"#3b6d11",Dragon:"#4a3fa0",Ghost:"#534ab7",Dark:"#2c2c2a"};
+const TYPE_BG = {Normal:"#f1efe8",Fire:"#faece7",Water:"#e6f1fb",Grass:"#eaf3de",Ground:"#faeeda",Electric:"#faeeda",Bug:"#eaf3de",Ice:"#e6f1fb",Steel:"#f1efe8",Flying:"#eeedfe",Fairy:"#fbeaf0",Psychic:"#fbeaf0",Poison:"#eaf3de",Dragon:"#eeedfe",Ghost:"#eeedfe",Dark:"#d3d1c7"};
+
+const MOVES = {
+  Normal:["Slap","Charge","Might","Hyper Blast"],
+  Fire:["Flare","Blaze Crash","Flamethrower","Sacred Burst"],
+  Water:["Bubblegun","Pressure Wave","Jetstream","Great Tsunami"],
+  Grass:["Thorn Whip","Ivy Lash","Pollen Cannon","Gaia Tempest"],
+  Ground:["Dust Attack","Burrow Strike","Obsidian Edge","Earthquake"],
+  Electric:["Quick Zap","Lightning Charge","Overcharge","Thunder Cannon"],
+  Bug:["Bug Bite","Venom Dust","Horn Pierce","Chitin Plague"],
+  Ice:["Snowball Toss","Ice Shard Volley","Frost Beam","Absolute Blizzard"],
+  Steel:["Iron Jab","Chrome Strike","Colossus Hammer","Metal Cataclysm"],
+  Flying:["Feather Flick","Razor Gale","Soaring Tempest","Heaven's Judgment"],
+  Fairy:["Pixie Dust","Charm","Blossoming Kiss","Radiant Starlight"],
+  Psychic:["Psy Tap","Mental Shock","Neural Echo","Cosmic Collapse"],
+  Poison:["Toxic Prick","Acid Needle","Corrosive Fog","Corrosive Fang"],
+  Dragon:["Drake Snap","Scale Slash","Imperial Roar","Draconic Wrath"],
+  Ghost:["Phantom Touch","Soul Swift","Phantom Claw","Grim Requiem"],
+  Dark:["Rouge Swipe","Black Mist","Abyssal Strike","Dark Dominion"]
+};
+const MOVE_POWER = [20,40,80,150];
+const MOVE_PP = [30,20,15,5];
+const DIFFS = ["Easy","Medium","Hard","Very Hard"];
+const DIFF_CLASSES = ["diff-easy","diff-medium","diff-hard","diff-vhard"];
+
+const ACADEMON_NAMES = [
+  ["Scribblix","Matheon","Scienara","Histowl","Artivex","Literon"],
+  ["Calcuwulf","Biozard","Chemixis","Physitron","Geografix","Psychowl"],
+  ["Grammaton","Logikra","Numerex","Scribovex","Natiowl","Socirawl"]
+];
+
+let state = {
+  lang:"en",
+  level:"",
+  grade:"",
+  subjects:[],
+  party:[],
+  aiParty:[],
+  badges:[],
+  notes:{},
+  currentSubject:null,
+  battle:null,
+  reviewHistory:[],
+  notesUsed:false
+};
+
+const T = {
+  en:{
+    gradeTitle:"What is your education level?",
+    gradeSub:"This helps us find the right subjects for you.",
+    loadingMsg:"Professor is preparing your subjects...",
+    hubTitle:"Your Journey",
+    subjectsLabel:"Your Subjects",
+    reviewLabel:"Ask the professor anything",
+    badgesLabel:"Conquered subjects",
+    notesLabel:"Your notes",
+    battlePrompt:"Choose a move to start the battle!",
+    aiLabel:"AI Professor",
+    yourLabel:"Your Academon",
+    correct:"✅ Correct!",
+    wrong:"❌ Wrong answer.",
+    continueBtn:"Continue →",
+    healBtn:"Heal",
+    battleBtnLabel:"Fight",
+    noBadges:"No badges yet — go battle a subject!",
+    badgeEarned:"🏅 You earned the",
+    badgeLabel:"badge!",
+    gradeWhat:"What grade are you in?",
+    colCourse:"What year are you in college?",
+    exit:"← Exit"
+  },
+  tl:{
+    gradeTitle:"Anong antas ng iyong pag-aaral?",
+    gradeSub:"Ito ay tutulong sa amin na mahanap ang tamang mga paksa para sa iyo.",
+    loadingMsg:"Ang propesor ay naghahanda ng iyong mga paksa...",
+    hubTitle:"Ang Iyong Paglalakbay",
+    subjectsLabel:"Ang Iyong mga Paksa",
+    reviewLabel:"Magtanong sa propesor",
+    badgesLabel:"Mga natalo na paksa",
+    notesLabel:"Ang iyong mga tala",
+    battlePrompt:"Pumili ng galaw upang magsimula ng laban!",
+    aiLabel:"AI Propesor",
+    yourLabel:"Ang Iyong Academon",
+    correct:"✅ Tama!",
+    wrong:"❌ Maling sagot.",
+    continueBtn:"Magpatuloy →",
+    healBtn:"Pagalingin",
+    battleBtnLabel:"Labanan",
+    noBadges:"Wala pang badge — humamon sa isang paksa!",
+    badgeEarned:"🏅 Nakuha mo ang",
+    badgeLabel:"badge!",
+    gradeWhat:"Anong baitang ka na?",
+    colCourse:"Anong taon ka sa kolehiyo?",
+    exit:"← Lumabas"
+  }
+};
+
+function t(key){return T[state.lang][key]||T.en[key]||key}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setLang(l){
+  state.lang=l;
+  updateGradeScreen();
+  show('s-grade');
+}
+
+function updateGradeScreen(){
+  document.getElementById('grade-title').textContent=t('gradeTitle');
+  document.getElementById('grade-sub').textContent=t('gradeSub');
+  const labels=state.lang==='tl'?
+    ['Elementarya','Hayskul','Kolehiyo / Unibersidad']:
+    ['Elementary School','High School','College / University'];
+  document.getElementById('btn-elem').textContent=labels[0];
+  document.getElementById('btn-hs').textContent=labels[1];
+  document.getElementById('btn-col').textContent=labels[2];
+}
+
+function setLevel(lv){
+  state.level=lv;
+  const opts=document.getElementById('grade-options');
+  opts.innerHTML='';
+  document.getElementById('gradenum-title').textContent=lv==='college'?t('colCourse'):t('gradeWhat');
+  const grades = lv==='elementary'?(state.lang==='tl'?['Baitang 1','Baitang 2','Baitang 3','Baitang 4','Baitang 5','Baitang 6']:['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6']):
+    lv==='highschool'?(state.lang==='tl'?['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12']:['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11 (STEM/ABM/HE)','Grade 12 (STEM/ABM/HE)']):
+    (state.lang==='tl'?['1st Year','2nd Year','3rd Year','4th Year']:['1st Year','2nd Year','3rd Year','4th Year']);
+  grades.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='btn';b.textContent=g;
+    b.onclick=()=>setGrade(g);
+    opts.appendChild(b);
+  });
+  show('s-gradenum');
+}
+
+async function setGrade(g){
+  state.grade=g;
+  document.getElementById('loading-msg').textContent=t('loadingMsg');
+  show('s-loading');
+  await initProfile();
+}
+
+async function callClaude(messages,system,maxTokens=1000){
+  const res=await fetch(API_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:MODEL,max_tokens:maxTokens,system:system||undefined,messages})
+  });
+  const d=await res.json();
+  return d.content.map(i=>i.text||'').join('');
+}
+
+async function initProfile(){
+  const sys=`You are a Philippine education curriculum expert. Respond ONLY in JSON. No markdown, no backticks, no explanation.`;
+  const prompt=`Student profile: level=${state.level}, grade="${state.grade}", language_preference=${state.lang}.
+Return a JSON object exactly like this:
+{"subjects":[{"name":"Subject Name","type":"Fire","englishName":"Subject Name in English"},...],"academonNames":["Name1","Name2","Name3","Name4","Name5","Name6"]}
+Rules:
+- Provide 6 subjects appropriate for this Philippine curriculum level and grade
+- Each subject must have a "type" from this list: Normal,Fire,Water,Grass,Ground,Electric,Bug,Ice,Steel,Flying,Fairy,Psychic,Poison,Dragon,Ghost,Dark
+- If lang is "tl", subject "name" should be in Filipino, otherwise English
+- "englishName" is always English
+- academonNames: 6 unique creative creature names fitting an educational theme
+- Assign types meaningfully: Science=Fire or Electric, Math=Steel or Psychic, English/Filipino=Normal or Fairy, History=Ghost or Dragon, PE=Fighting style, Arts=Fairy, etc.`;
+  try{
+    const raw=await callClaude([{role:'user',content:prompt}],sys,800);
+    const parsed=JSON.parse(raw.trim());
+    state.subjects=parsed.subjects;
+    buildParty(parsed.academonNames);
+    buildHub();
+    show('s-hub');
+  }catch(e){
+    fallbackProfile();
+  }
+}
+
+function fallbackProfile(){
+  const subs=state.lang==='tl'?[
+    {name:'Agham',type:'Fire',englishName:'Science'},
+    {name:'Matematika',type:'Steel',englishName:'Mathematics'},
+    {name:'Filipino',type:'Fairy',englishName:'Filipino Language'},
+    {name:'Araling Panlipunan',type:'Ghost',englishName:'Social Studies'},
+    {name:'MAPEH',type:'Flying',englishName:'MAPEH'},
+    {name:'Edukasyong Pantahanan',type:'Grass',englishName:'Home Economics'}
+  ]:[
+    {name:'Science',type:'Fire',englishName:'Science'},
+    {name:'Mathematics',type:'Steel',englishName:'Mathematics'},
+    {name:'English',type:'Fairy',englishName:'English'},
+    {name:'Social Studies',type:'Ghost',englishName:'Social Studies'},
+    {name:'MAPEH',type:'Flying',englishName:'MAPEH'},
+    {name:'Values Education',type:'Psychic',englishName:'Values Education'}
+  ];
+  state.subjects=subs;
+  buildParty(ACADEMON_NAMES[0]);
+  buildHub();
+  show('s-hub');
+}
+
+function buildParty(names){
+  state.party=state.subjects.map((s,i)=>({
+    name:names[i]||('Acad'+i),
+    type:s.type,
+    hp:500,maxHp:500,
+    subjectIndex:i,
+    pp:[[30,30],[20,20],[15,15],[5,5]]
+  }));
+  state.aiParty=state.subjects.map((s,i)=>({
+    name:'Prof-'+names[i],
+    type:s.type,
+    hp:500,maxHp:500,
+    subjectIndex:i,
+    pp:[[30,30],[20,20],[15,15],[5,5]]
+  }));
+}
+
+function buildHub(){
+  const lvlMap={en:{elementary:'Elementary',highschool:'High School',college:'College'},tl:{elementary:'Elementarya',highschool:'Hayskul',college:'Kolehiyo'}};
+  document.getElementById('hub-level-label').textContent=(lvlMap[state.lang]||lvlMap.en)[state.level]+' · '+state.grade;
+  document.getElementById('hub-title').textContent=t('hubTitle');
+  document.getElementById('badge-count').textContent='🏅 '+state.badges.length+' / '+state.subjects.length;
+  
+  const sl=document.getElementById('subject-list');
+  sl.innerHTML='';
+  document.getElementById('subjects-label').textContent=t('subjectsLabel');
+  state.subjects.forEach((s,i)=>{
+    const li=document.createElement('li');
+    const hasBadge=state.badges.includes(i);
+    li.innerHTML=`<span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:${TYPE_COLORS[s.type]};display:inline-block"></span><span>${s.name}</span>${hasBadge?'<span style="font-size:11px;background:#eaf3de;color:#27500a;padding:2px 6px;border-radius:4px">✓ Done</span>':''}</span><button class="fight-btn" onclick="startBattle(${i})">${t('battleBtnLabel')}</button>`;
+    sl.appendChild(li);
+  });
+
+  const ns=document.getElementById('notes-subject-sel');
+  ns.innerHTML='';
+  state.subjects.forEach((s,i)=>{
+    const o=document.createElement('option');
+    o.value=i;o.textContent=s.name;
+    ns.appendChild(o);
+  });
+  ns.onchange=()=>loadNote(ns.value);
+  renderBadges();
+  renderParty();
+}
+
+function showTab(tab){
+  ['battle','review','badges','notes','academons'].forEach(t=>{
+    const c=document.getElementById('tab-'+t+'-content');
+    const b=document.getElementById('tab-'+(t==='academons'?'acs':t==='battle'?'battle':t));
+    if(c)c.style.display=tab===t?'block':'none';
+    if(b)b.classList.toggle('active',tab===t);
+  });
+  if(tab==='notes')loadNote(document.getElementById('notes-subject-sel').value);
+  if(tab==='badges')renderBadges();
+  if(tab==='academons')renderParty();
+}
+
+function renderBadges(){
+  const g=document.getElementById('badge-grid');
+  const np=document.getElementById('no-badges');
+  document.getElementById('badges-label').textContent=t('badgesLabel');
+  g.innerHTML='';
+  const EMOJIS=['🔥','⚙️','✨','👻','🌊','⚡','🌿','❄️','🌀','🦋','🌸','💫','☠️','🐉','🎭','🌑'];
+  state.badges.forEach(i=>{
+    const s=state.subjects[i];
+    const div=document.createElement('div');
+    div.className='badge-card';
+    div.innerHTML=`<div class="badge-icon">${EMOJIS[TYPES.indexOf(s.type)]||'📖'}</div><div style="font-size:13px;font-weight:500">${s.name}</div><div class="badge-label" style="color:${TYPE_COLORS[s.type]}">${s.type} Badge</div>`;
+    g.appendChild(div);
+  });
+  np.style.display=state.badges.length?'none':'block';
+}
+
+function renderParty(){
+  const g=document.getElementById('party-grid');
+  g.innerHTML='';
+  state.party.forEach((a,i)=>{
+    const s=state.subjects[a.subjectIndex];
+    const pct=a.hp/a.maxHp;
+    const div=document.createElement('div');
+    div.className='party-card';
+    div.style.borderColor=TYPE_COLORS[a.type];
+    div.innerHTML=`<div class="party-avatar">🐾</div><div class="party-name">${a.name}</div><div class="party-hp" style="color:${TYPE_COLORS[a.type]}">${a.type}</div><div class="hp-bar-wrap" style="margin:4px 0;height:6px"><div class="hp-bar ${pct>0.5?'high':pct>0.25?'mid':'low'}" style="width:${Math.round(pct*100)}%"></div></div><div class="party-hp">${a.hp} / ${a.maxHp}</div><button class="heal-btn" onclick="healAcademon(${i})" ${a.hp>=a.maxHp?'disabled':''} style="${a.hp>=a.maxHp?'opacity:0.4;cursor:not-allowed':''}">${t('healBtn')}</button>`;
+    g.appendChild(div);
+  });
+}
+
+function healAcademon(i){
+  state.party[i].hp=state.party[i].maxHp;
+  state.party[i].pp=[[30,30],[20,20],[15,15],[5,5]];
+  renderParty();
+}
+
+function loadNote(idx){
+  document.getElementById('notes-area').value=state.notes[idx]||'';
+}
+
+function saveNote(){
+  const idx=document.getElementById('notes-subject-sel').value;
+  state.notes[idx]=document.getElementById('notes-area').value;
+}
+
+async function sendReview(){
+  const input=document.getElementById('review-input');
+  const msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  const box=document.getElementById('review-chat-box');
+  box.textContent=(state.lang==='tl'?'Naglo-load...':'Loading...');
+  const currentSubjectNames=state.subjects.map(s=>s.name).join(', ');
+  const sys=state.lang==='tl'?
+    `Ikaw ay isang matulungin na guro na nagtuturo ng mga paksang ito: ${currentSubjectNames}. Sagutin ang mga tanong ng estudyante sa Filipino/Tagalog. Maging malinaw at maikli.`:
+    `You are a helpful tutor for a Philippine curriculum student (${state.level}, ${state.grade}). Their subjects are: ${currentSubjectNames}. Answer study questions clearly and concisely.`;
+  state.reviewHistory.push({role:'user',content:msg});
+  try{
+    const res=await callClaude(state.reviewHistory,sys,600);
+    state.reviewHistory.push({role:'assistant',content:res});
+    box.textContent=res;
+  }catch(e){
+    box.textContent='Could not connect. Try again.';
+  }
+}
+
+// ---- BATTLE ENGINE ----
+
+async function startBattle(subjectIdx){
+  state.currentSubject=subjectIdx;
+  const playerAca=state.party[subjectIdx];
+  const aiAca=state.aiParty[subjectIdx];
+  const subj=state.subjects[subjectIdx];
+  state.battle={
+    subjectIdx,
+    playerAca,aiAca,subj,
+    round:0,
+    totalRounds:4,
+    questions:[],
+    currentQ:null,
+    phase:'idle',
+    notesUsed:false
+  };
+  state.notesUsed=false;
+  show('s-battle');
+  document.getElementById('battle-subject-name').textContent=subj.name;
+  document.getElementById('round-badge').textContent=state.lang==='tl'?'Ikaw vs AI':'You vs AI';
+  document.getElementById('ai-combatant-label').textContent=t('aiLabel');
+  document.getElementById('your-combatant-label').textContent=t('yourLabel');
+  document.getElementById('ai-aca-name').textContent=aiAca.name;
+  document.getElementById('your-aca-name').textContent=playerAca.name;
+  setBadgeType('ai-type-badge',subj.type);
+  setBadgeType('your-type-badge',subj.type);
+  updateHP();
+  buildMoveButtons();
+  document.getElementById('question-box').innerHTML=`<div style="font-size:14px;color:var(--text-secondary,#5f5e5a);text-align:center">${t('battlePrompt')}</div>`;
+  document.getElementById('feedback-box').classList.remove('show');
+  document.getElementById('continue-btn').style.display='none';
+  document.getElementById('battle-log').textContent='';
+  document.getElementById('notes-used-indicator').textContent='';
+  document.getElementById('notes-once-btn').disabled=false;
+  await preloadQuestions();
+}
+
+function setBadgeType(id,type){
+  const el=document.getElementById(id);
+  el.textContent=type;
+  el.style.background=TYPE_BG[type]||'#f1efe8';
+  el.style.color=TYPE_COLORS[type]||'#2c2c2a';
+}
+
+async function preloadQuestions(){
+  document.getElementById('battle-log').textContent=state.lang==='tl'?'Naghahanda ng mga tanong...':'Preparing questions...';
+  const b=state.battle;
+  const sys=`You are a quiz question generator for Philippine curriculum. Respond ONLY in valid JSON. No markdown, no backticks.`;
+  const lang=state.lang;
+  const prompt=`Generate 16 multiple-choice quiz questions for subject "${b.subj.englishName||b.subj.name}" at level ${state.level}, grade "${state.grade}", Philippines curriculum.
+Return JSON exactly:
+{"questions":[{"question":"...","choices":["A","B","C","D"],"correct":0,"tier":0,"explanation":"..."},...]}
+- 4 questions per tier: tier 0=Easy, 1=Medium, 2=Hard, 3=Very Hard
+- correct: index 0-3 of the correct choice
+- explanation: brief explanation of the correct answer (1-2 sentences)${lang==='tl'?'\n- question and choices MUST be in Filipino/Tagalog. explanation also in Filipino.':'\n- question and choices in English'}
+- choices must be plausible, only one correct`;
+  try{
+    const raw=await callClaude([{role:'user',content:prompt}],sys,1200);
+    const parsed=JSON.parse(raw.trim());
+    b.questions=parsed.questions;
+    document.getElementById('battle-log').textContent=state.lang==='tl'?'Handa na! Pumili ng galaw.':'Ready! Choose a move.';
+  }catch(e){
+    b.questions=generateFallbackQuestions(b.subj);
+    document.getElementById('battle-log').textContent='Questions loaded.';
+  }
+}
+
+function generateFallbackQuestions(subj){
+  const qs=[];
+  for(let t=0;t<4;t++){
+    for(let i=0;i<4;i++){
+      qs.push({
+        question:`[${DIFFS[t]}] Sample question about ${subj.englishName||subj.name} #${i+1}`,
+        choices:['Answer A','Answer B','Answer C','Answer D'],
+        correct:0,
+        tier:t,
+        explanation:`The correct answer is Answer A because it is the most accurate response for ${subj.englishName||subj.name}.`
+      });
+    }
+  }
+  return qs;
+}
+
+function buildMoveButtons(){
+  const b=state.battle;
+  const type=b.subj.type;
+  const moves=MOVES[type]||MOVES.Normal;
+  const grid=document.getElementById('moves-grid');
+  grid.innerHTML='';
+  moves.forEach((mv,i)=>{
+    const pp=b.playerAca.pp[i];
+    const btn=document.createElement('button');
+    btn.className='move-btn';
+    btn.id='move-btn-'+i;
+    btn.disabled=pp[0]<=0||b.battle?.phase==='feedback';
+    btn.innerHTML=`<div class="move-name">${mv}</div><div class="move-meta">${DIFFS[i]} · Pwr ${MOVE_POWER[i]} · PP ${pp[0]}/${pp[1]}</div>`;
+    btn.onclick=()=>pickMove(i);
+    grid.appendChild(btn);
+  });
+}
+
+async function pickMove(moveIdx){
+  const b=state.battle;
+  if(b.phase==='feedback')return;
+  if(b.questions.length===0){
+    document.getElementById('battle-log').textContent='Loading questions... please wait';
+    return;
+  }
+  b.phase='feedback';
+  setMovesDisabled(true);
+  document.getElementById('continue-btn').style.display='none';
+
+  const tierQs=b.questions.filter(q=>q.tier===moveIdx);
+  if(tierQs.length===0){
+    b.phase='idle';setMovesDisabled(false);return;
+  }
+  const q=tierQs[Math.floor(Math.random()*tierQs.length)];
+  b.currentQ={q,moveIdx};
+  b.playerAca.pp[moveIdx][0]=Math.max(0,b.playerAca.pp[moveIdx][0]-1);
+
+  const qbox=document.getElementById('question-box');
+  const dc=document.createElement('span');
+  dc.className='difficulty-badge '+DIFF_CLASSES[moveIdx];
+  dc.textContent=DIFFS[moveIdx];
+  qbox.innerHTML='';
+  qbox.appendChild(dc);
+  const qt=document.createElement('p');
+  qt.className='question-text';
+  qt.style.marginTop='8px';
+  qt.textContent=q.question;
+  qbox.appendChild(qt);
+
+  const choicesGrid=document.createElement('div');
+  choicesGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px';
+  q.choices.forEach((ch,ci)=>{
+    const cb=document.createElement('button');
+    cb.style.cssText='padding:8px 10px;border-radius:8px;border:0.5px solid var(--border,rgba(0,0,0,0.12));background:var(--surface-1,#f1efe8);cursor:pointer;font-size:13px;text-align:left;color:var(--text-primary,#2c2c2a)';
+    cb.textContent=String.fromCharCode(65+ci)+'. '+ch;
+    cb.onclick=()=>answerQuestion(ci,choicesGrid,cb);
+    choicesGrid.appendChild(cb);
+  });
+  qbox.appendChild(choicesGrid);
+
+  buildMoveButtons();
+}
+
+function answerQuestion(chosen,grid,clickedBtn){
+  const b=state.battle;
+  const {q,moveIdx}=b.currentQ;
+  const correct=chosen===q.correct;
+  const fb=document.getElementById('feedback-box');
+  Array.from(grid.children).forEach((btn,i)=>{
+    btn.onclick=null;
+    if(i===q.correct)btn.style.background='#eaf3de';
+    else if(i===chosen&&!correct)btn.style.background='#fcebeb';
+  });
+  fb.className='feedback-box show '+(correct?'correct':'wrong');
+  if(correct){
+    const dmg=MOVE_POWER[moveIdx];
+    b.aiAca.hp=Math.max(0,b.aiAca.hp-dmg);
+    fb.innerHTML=`<strong>${t('correct')}</strong><br>${q.explanation}`;
+    document.getElementById('battle-log').textContent=`${b.playerAca.name} dealt ${dmg} damage!`;
+  } else {
+    const dmg=MOVE_POWER[moveIdx];
+    b.playerAca.hp=Math.max(0,b.playerAca.hp-dmg);
+    fb.innerHTML=`<strong>${t('wrong')}</strong> ${q.choices[q.correct]} was correct.<br>${q.explanation}`;
+    document.getElementById('battle-log').textContent=`${b.aiAca.name} counter-attacked for ${dmg} damage!`;
+  }
+  updateHP();
+  document.getElementById('continue-btn').style.display='inline-block';
+  buildMoveButtons();
+}
+
+function continueAfterFeedback(){
+  const b=state.battle;
+  document.getElementById('feedback-box').classList.remove('show');
+  document.getElementById('continue-btn').style.display='none';
+  b.phase='idle';
+  if(b.playerAca.hp<=0){
+    endBattle(false);return;
+  }
+  if(b.aiAca.hp<=0){
+    endBattle(true);return;
+  }
+  // AI counter-move
+  const aiMoveIdx=Math.floor(Math.random()*4);
+  const aiPP=b.aiAca.pp[aiMoveIdx];
+  if(aiPP[0]>0){
+    const aiDmg=Math.floor(MOVE_POWER[aiMoveIdx]*0.4);
+    b.playerAca.hp=Math.max(0,b.playerAca.hp-aiDmg);
+    b.aiAca.pp[aiMoveIdx][0]--;
+    document.getElementById('battle-log').textContent=`${b.aiAca.name} used ${MOVES[b.subj.type][aiMoveIdx]}! -${aiDmg} HP`;
+    updateHP();
+  }
+  if(b.playerAca.hp<=0){endBattle(false);return;}
+  setMovesDisabled(false);
+  buildMoveButtons();
+}
+
+function updateHP(){
+  const b=state.battle;
+  const upd=(prefix,aca)=>{
+    const pct=aca.hp/aca.maxHp;
+    const bar=document.getElementById(prefix+'-hp-bar');
+    bar.style.width=Math.round(pct*100)+'%';
+    bar.className='hp-bar '+(pct>0.5?'high':pct>0.25?'mid':'low');
+    document.getElementById(prefix+'-hp-text').textContent=`HP ${aca.hp} / ${aca.maxHp}`;
+  };
+  upd('ai',b.aiAca);upd('your',b.playerAca);
+}
+
+function setMovesDisabled(disabled){
+  for(let i=0;i<4;i++){
+    const btn=document.getElementById('move-btn-'+i);
+    if(btn)btn.disabled=disabled||(state.battle?.playerAca?.pp[i][0]<=0);
+  }
+}
+
+function endBattle(won){
+  const b=state.battle;
+  document.getElementById('question-box').innerHTML=won?
+    `<div style="text-align:center;padding:12px"><div style="font-size:32px;margin-bottom:8px">🏆</div><div style="font-size:17px;font-weight:500">${state.lang==='tl'?'Nanalo ka!':'You won!'}</div><div style="font-size:13px;color:var(--text-secondary,#5f5e5a);margin-top:4px">${b.subj.name} ${state.lang==='tl'?'ay natalo!':'conquered!'}</div></div>`:
+    `<div style="text-align:center;padding:12px"><div style="font-size:32px;margin-bottom:8px">💀</div><div style="font-size:17px;font-weight:500">${state.lang==='tl'?'Natalo ka.':'You lost.'}</div><div style="font-size:13px;color:var(--text-secondary,#5f5e5a);margin-top:4px">${state.lang==='tl'?'Subukan muli!':'Try again after healing!'}</div></div>`;
+  document.getElementById('moves-grid').innerHTML='';
+  document.getElementById('feedback-box').classList.remove('show');
+  document.getElementById('continue-btn').style.display='none';
+  if(won&&!state.badges.includes(b.subjectIdx)){
+    state.badges.push(b.subjectIdx);
+    document.getElementById('badge-count').textContent='🏅 '+state.badges.length+' / '+state.subjects.length;
+  }
+  const exitBtn=document.createElement('button');
+  exitBtn.className='btn primary continue-btn';
+  exitBtn.textContent=state.lang==='tl'?'Bumalik sa Hub':'Return to Hub';
+  exitBtn.onclick=exitBattle;
+  document.getElementById('moves-grid').appendChild(exitBtn);
+}
+
+function useNotesOnce(){
+  if(state.notesUsed)return;
+  state.notesUsed=true;
+  document.getElementById('notes-once-btn').disabled=true;
+  document.getElementById('notes-used-indicator').textContent='(used)';
+  const idx=state.currentSubject;
+  const note=state.notes[idx]||'';
+  const fb=document.getElementById('feedback-box');
+  fb.className='feedback-box show';
+  fb.style.background='#faeeda';fb.style.borderColor='#ef9f27';fb.style.color='#633806';
+  fb.innerHTML=note?`<strong>📝 ${state.lang==='tl'?'Ang iyong mga tala':'Your notes'}:</strong><br>${note}`:
+    `<em>${state.lang==='tl'?'Walang tala para sa paksang ito. Idagdag ang mga tala sa Notes tab.':'No notes for this subject. Add notes in the Notes tab.'}</em>`;
+  document.getElementById('continue-btn').style.display='inline-block';
+  document.getElementById('continue-btn').onclick=()=>{
+    fb.classList.remove('show');
+    document.getElementById('continue-btn').style.display='none';
+    document.getElementById('continue-btn').onclick=continueAfterFeedback;
+  };
+}
+
+function exitBattle(){
+  buildHub();
+  show('s-hub');
+}
+</script>
+</body>
+</html>
